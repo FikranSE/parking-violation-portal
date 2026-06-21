@@ -4,7 +4,6 @@ import (
 	"time"
 )
 
-// FineRule represents a versioned fine calculation rule
 type FineRule struct {
 	ID                int                    `json:"id"`
 	Version           int                    `json:"version"`
@@ -15,14 +14,12 @@ type FineRule struct {
 	RepeatMultipliers map[string]float64     `json:"repeat_multipliers"`
 }
 
-// TimeMultiplier defines a multiplier based on the time of day
 type TimeMultiplier struct {
-	StartTime  string  `json:"start_time"` // Format: "HH:MM"
-	EndTime    string  `json:"end_time"`   // Format: "HH:MM"
+	StartTime  string  `json:"start_time"` 
+	EndTime    string  `json:"end_time"`   
 	Multiplier float64 `json:"multiplier"`
 }
 
-// RuleService interface abstracts fetching rules
 type RuleService interface {
 	GetActiveRule() (*FineRule, error)
 }

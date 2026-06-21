@@ -16,9 +16,9 @@ func NewHandler(service *Service) *Handler {
 
 func (h *Handler) ProcessPayment(c *gin.Context) {
 	var input struct {
-		ViolationID int     `json:"violation_id" binding:"required"`
-		Amount      float64 `json:"amount" binding:"required"`
-		Scenario    string  `json:"scenario" binding:"required,oneof=success failed"`
+		ViolationID     int     `json:"violation_id" binding:"required"`
+		Amount          float64 `json:"amount" binding:"required"`
+		PaymentScenario string  `json:"payment_scenario" binding:"required,oneof=success failed"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -26,7 +26,7 @@ func (h *Handler) ProcessPayment(c *gin.Context) {
 		return
 	}
 
-	payment, err := h.service.Charge(input.ViolationID, input.Amount, input.Scenario)
+	payment, err := h.service.ProcessPayment(input.ViolationID, input.Amount, input.PaymentScenario)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

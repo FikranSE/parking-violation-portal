@@ -27,7 +27,6 @@ export default function ViolationForm() {
     setErrorMsg('');
 
     try {
-      // Formats timestamp correctly for Go backend
       const payload = {
         ...formData,
         violation_time: new Date(formData.violation_time).toISOString(),
@@ -46,9 +45,8 @@ export default function ViolationForm() {
       }
 
       const created: Violation = data.violation;
-      setSuccessMsg(`Violation submitted successfully! Calculated Fine: IDR ${created.calculated_fine}`);
+      setSuccessMsg(`Violation recorded. Calculated Fine: IDR ${created.calculated_fine.toLocaleString()}`);
       
-      // Reset form
       setFormData({
         license_plate: '',
         violation_type: 'expired_meter',
@@ -64,24 +62,29 @@ export default function ViolationForm() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto border border-gray-100">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Submit Parking Violation</h2>
+    <div className="bg-white p-8 rounded-lg border border-neutral-200">
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold tracking-tight text-neutral-900">Submit Violation</h3>
+        <p className="text-sm text-neutral-500 mt-1">Record a new incident into the system.</p>
+      </div>
       
       {successMsg && (
-        <div className="mb-4 p-4 bg-green-50 text-green-700 rounded-md border border-green-200">
+        <div className="mb-6 p-4 bg-neutral-50 text-neutral-900 text-sm font-medium rounded-md border border-neutral-200 flex items-center gap-2">
+          <svg className="w-4 h-4 text-neutral-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
           {successMsg}
         </div>
       )}
 
       {errorMsg && (
-        <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-md border border-red-200">
+        <div className="mb-6 p-4 bg-neutral-50 text-red-600 text-sm font-medium rounded-md border border-red-200 flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           {errorMsg}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">License Plate</label>
+          <label className="block text-sm font-medium text-neutral-800 mb-1.5">License Plate</label>
           <input
             type="text"
             name="license_plate"
@@ -89,27 +92,32 @@ export default function ViolationForm() {
             value={formData.license_plate}
             onChange={handleChange}
             placeholder="e.g. B 1234 XYZ"
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 bg-transparent border border-neutral-200 rounded-md text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Violation Type</label>
-          <select
-            name="violation_type"
-            value={formData.violation_type}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
-          >
-            <option value="expired_meter">Expired Meter (IDR 50k base)</option>
-            <option value="no_parking_zone">No Parking Zone (IDR 150k base)</option>
-            <option value="blocking_hydrant">Blocking Hydrant (IDR 250k base)</option>
-            <option value="disabled_spot">Disabled Spot (IDR 500k base)</option>
-          </select>
+          <label className="block text-sm font-medium text-neutral-800 mb-1.5">Violation Type</label>
+          <div className="relative">
+            <select
+              name="violation_type"
+              value={formData.violation_type}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-transparent border border-neutral-200 rounded-md text-sm text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors appearance-none"
+            >
+              <option value="expired_meter">Expired Meter (IDR 50k base)</option>
+              <option value="no_parking_zone">No Parking Zone (IDR 150k base)</option>
+              <option value="blocking_hydrant">Blocking Hydrant (IDR 250k base)</option>
+              <option value="disabled_spot">Disabled Spot (IDR 500k base)</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </div>
+          </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+          <label className="block text-sm font-medium text-neutral-800 mb-1.5">Location</label>
           <input
             type="text"
             name="location"
@@ -117,41 +125,45 @@ export default function ViolationForm() {
             value={formData.location}
             onChange={handleChange}
             placeholder="e.g. Sudirman St."
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 bg-transparent border border-neutral-200 rounded-md text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors"
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Timestamp</label>
-          <input
-            type="datetime-local"
-            name="violation_time"
-            required
-            value={formData.violation_time}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-sm font-medium text-neutral-800 mb-1.5">Timestamp</label>
+            <input
+              type="datetime-local"
+              name="violation_time"
+              required
+              value={formData.violation_time}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-transparent border border-neutral-200 rounded-md text-sm text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-800 mb-1.5">Photo URL</label>
+            <input
+              type="url"
+              name="photo_url"
+              value={formData.photo_url}
+              onChange={handleChange}
+              placeholder="https://..."
+              className="w-full px-3 py-2 bg-transparent border border-neutral-200 rounded-md text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors"
+            />
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Photo URL (Mock Upload)</label>
-          <input
-            type="text"
-            name="photo_url"
-            value={formData.photo_url}
-            onChange={handleChange}
-            placeholder="https://example.com/photo.jpg"
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-          />
+        <div className="pt-4">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-neutral-900 text-white text-sm font-medium py-2.5 px-4 rounded-md hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Processing...' : 'Submit Record'}
+          </button>
         </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-md hover:bg-blue-700 transition duration-200 disabled:opacity-50"
-        >
-          {loading ? 'Submitting...' : 'Submit Violation'}
-        </button>
       </form>
     </div>
   );

@@ -11,36 +11,35 @@ export default function Home() {
   const [role, setRole] = useState<Role>('OFFICER');
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Global Header / Role Switcher */}
-      <header className="bg-white border-b shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div className="min-h-screen bg-white text-neutral-900 font-sans selection:bg-neutral-200">
+      <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
+        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
+            <div className="w-6 h-6 bg-neutral-900 rounded-sm flex items-center justify-center text-white text-xs font-bold">
               P
             </div>
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+            <h1 className="text-sm font-semibold tracking-tight text-neutral-900">
               Parking Violation Portal
             </h1>
           </div>
           
-          <div className="flex items-center space-x-3 bg-gray-100 p-1 rounded-lg">
+          <div className="flex items-center gap-1 bg-neutral-100/50 p-1 rounded-md border border-neutral-200">
             <button
               onClick={() => setRole('OFFICER')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
                 role === 'OFFICER' 
-                  ? 'bg-white shadow-sm text-blue-700' 
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white border border-neutral-200 text-neutral-900' 
+                  : 'text-neutral-500 hover:text-neutral-900 border border-transparent'
               }`}
             >
               Officer View
             </button>
             <button
               onClick={() => setRole('MEMBER')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
                 role === 'MEMBER' 
-                  ? 'bg-white shadow-sm text-blue-700' 
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white border border-neutral-200 text-neutral-900' 
+                  : 'text-neutral-500 hover:text-neutral-900 border border-transparent'
               }`}
             >
               Member View
@@ -49,20 +48,19 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <main className="max-w-7xl w-full mx-auto px-6 py-12">
+        <div className="animate-in fade-in duration-500">
           {role === 'OFFICER' ? (
-            <div className="space-y-8">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-800">Officer Dashboard</h2>
-                <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-blue-200">
-                  System Active
-                </span>
+            <div className="space-y-12">
+              <div className="flex flex-col gap-2">
+                <h2 className="text-2xl font-semibold tracking-tight text-neutral-900">Officer Dashboard</h2>
+                <p className="text-sm text-neutral-500 max-w-2xl">
+                  Record new parking violations or manage the system's dynamic fine configuration rules.
+                </p>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
                 <div>
-                  <p className="text-gray-600 mb-6">Use the form below to record a new parking violation. The system will automatically calculate the fine based on current rules.</p>
                   <ViolationForm />
                 </div>
                 <div>
@@ -71,10 +69,15 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-12">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-800">Member Portal</h2>
-                <span className="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-green-200">
+                <div className="flex flex-col gap-2">
+                  <h2 className="text-2xl font-semibold tracking-tight text-neutral-900">Member Portal</h2>
+                  <p className="text-sm text-neutral-500 max-w-2xl">
+                    View your parking violations and settle outstanding fines.
+                  </p>
+                </div>
+                <span className="bg-neutral-100 text-neutral-800 text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded border border-neutral-200">
                   Welcome Back
                 </span>
               </div>

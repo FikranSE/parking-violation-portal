@@ -41,5 +41,5 @@ export interface Payment {
 }
 
 export interface TransactionHistoryItem extends Violation {
-  payment_status?: string; // Appended by the GetHistory endpoint
+  payment_status?: string; 
 }

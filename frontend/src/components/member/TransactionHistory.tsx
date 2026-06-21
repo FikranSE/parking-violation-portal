@@ -1,89 +1,88 @@
 'use client';
 
-import { TransactionHistoryItem } from '@/types';
-
-// Mock history data based on the transaction GET endpoint
-const mockHistory: TransactionHistoryItem[] = [
-  {
-    id: 1,
-    license_plate: 'B 1234 XYZ',
-    violation_type: 'expired_meter',
-    location: 'Sudirman St.',
-    violation_time: new Date(Date.now() - 86400000).toISOString(),
-    rule_version_id: 1,
-    calculated_fine: 50000,
-    status: 'PAID',
-    payment_status: 'SUCCESS',
-    created_at: new Date(Date.now() - 80000000).toISOString(),
-    updated_at: new Date(Date.now() - 80000000).toISOString(),
-  },
-  {
-    id: 2,
-    license_plate: 'B 1234 XYZ',
-    violation_type: 'no_parking_zone',
-    location: 'Thamrin St.',
-    violation_time: new Date(Date.now() - 5 * 86400000).toISOString(),
-    rule_version_id: 1,
-    calculated_fine: 150000,
-    status: 'PAID',
-    payment_status: 'SUCCESS',
-    created_at: new Date(Date.now() - 4 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 4 * 86400000).toISOString(),
-  }
-];
+import { useState, useEffect } from 'react';
+import { Violation } from '@/types';
 
 export default function TransactionHistory() {
-  return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-      <div className="px-6 py-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-        <h3 className="font-semibold text-gray-800">Transaction & Audit History</h3>
-      </div>
+  const [transactions, setTransactions] = useState<Violation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      const res = await fetch('http://localhost:8080/api/transactions');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch history');
       
+      const sorted = (data.data || []).sort((a: Violation, b: Violation) => 
+        new Date(b.created_at || b.violation_time).getTime() - new Date(a.created_at || a.violation_time).getTime()
+      );
+      setTransactions(sorted);
+    } catch (err: any) {
+      setErrorMsg(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
+      <div className="px-6 py-5 border-b border-neutral-200 bg-neutral-50/50">
+        <h3 className="font-semibold tracking-tight text-neutral-900">Transaction Ledger</h3>
+        <p className="text-sm text-neutral-500 mt-1">Immutable record of all violation states and rule versions.</p>
+      </div>
+
       <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs text-gray-600 uppercase bg-gray-50 border-b">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-neutral-50 text-neutral-600 font-medium border-b border-neutral-200">
             <tr>
-              <th scope="col" className="px-6 py-3 font-medium">Violation ID</th>
-              <th scope="col" className="px-6 py-3 font-medium">Type & Location</th>
-              <th scope="col" className="px-6 py-3 font-medium">Rule Version</th>
-              <th scope="col" className="px-6 py-3 font-medium">Calculated Fine</th>
-              <th scope="col" className="px-6 py-3 font-medium">Payment Status</th>
+              <th className="px-6 py-3 whitespace-nowrap">ID</th>
+              <th className="px-6 py-3 whitespace-nowrap">License Plate</th>
+              <th className="px-6 py-3 whitespace-nowrap">Type</th>
+              <th className="px-6 py-3 whitespace-nowrap">Rule Ver</th>
+              <th className="px-6 py-3 text-right whitespace-nowrap">Calculated Fine</th>
+              <th className="px-6 py-3 text-right whitespace-nowrap">Status</th>
             </tr>
           </thead>
-          <tbody>
-            {mockHistory.map((item) => (
-              <tr key={item.id} className="bg-white border-b hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 font-mono text-gray-500">
-                  #{item.id}
-                </td>
-                <td className="px-6 py-4">
-                  <p className="font-medium text-gray-900 capitalize">{item.violation_type.replace(/_/g, ' ')}</p>
-                  <p className="text-gray-500 text-xs">{item.location}</p>
-                  <p className="text-gray-400 text-xs">{new Date(item.violation_time).toLocaleDateString()}</p>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">
-                    v{item.rule_version_id}
-                  </span>
-                </td>
-                <td className="px-6 py-4 font-medium text-gray-900">
-                  IDR {item.calculated_fine.toLocaleString()}
-                </td>
-                <td className="px-6 py-4">
-                  {item.payment_status === 'SUCCESS' ? (
-                    <span className="text-green-600 font-medium text-xs flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                      SUCCESS
-                    </span>
-                  ) : (
-                    <span className="text-red-600 font-medium text-xs flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                      FAILED
-                    </span>
-                  )}
-                </td>
+          <tbody className="divide-y divide-neutral-200 bg-white">
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-8 text-center text-neutral-400">Loading records...</td>
               </tr>
-            ))}
+            ) : errorMsg ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-8 text-center text-red-600">{errorMsg}</td>
+              </tr>
+            ) : transactions.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-8 text-center text-neutral-500">No transactions recorded yet.</td>
+              </tr>
+            ) : (
+              transactions.map((txn) => (
+                <tr key={txn.id} className="hover:bg-neutral-50/50 transition-colors">
+                  <td className="px-6 py-4 font-mono text-xs text-neutral-500">#{txn.id}</td>
+                  <td className="px-6 py-4 font-medium text-neutral-900">{txn.license_plate}</td>
+                  <td className="px-6 py-4 text-neutral-600 capitalize">{txn.violation_type.replace(/_/g, ' ')}</td>
+                  <td className="px-6 py-4">
+                    <span className="bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded border border-neutral-200 text-xs font-mono">v{txn.rule_version_id}</span>
+                  </td>
+                  <td className="px-6 py-4 text-right font-medium text-neutral-900">
+                    IDR {txn.calculated_fine.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    {txn.status === 'PAID' ? (
+                      <span className="text-neutral-500 font-medium text-xs">PAID</span>
+                    ) : (
+                      <span className="text-red-600 font-medium text-xs">UNPAID</span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

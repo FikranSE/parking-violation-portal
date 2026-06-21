@@ -9,10 +9,11 @@ import (
 
 type Handler struct {
 	service *Service
+	repo    *InMemoryRepository
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *Service, repo *InMemoryRepository) *Handler {
+	return &Handler{service: service, repo: repo}
 }
 
 func (h *Handler) SubmitViolation(c *gin.Context) {
@@ -47,22 +48,21 @@ func (h *Handler) SubmitViolation(c *gin.Context) {
 	})
 }
 
-// GetHistory returns a list of all violations and their rule versions (mock implementation)
+func (h *Handler) GetViolationsByPlate(c *gin.Context) {
+	plate := c.Param("license_plate")
+	violations, _ := h.repo.GetByPlate(plate)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Violations fetched successfully",
+		"data":    violations,
+	})
+}
+
 func (h *Handler) GetHistory(c *gin.Context) {
-	// In a real application, you would fetch this from a transactions or violations view/repo
-	// that joins with rules and payments.
+	violations, _ := h.repo.GetAll()
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Transaction history fetched successfully",
-		"data": []gin.H{
-			{
-				"violation_id":    1,
-				"license_plate":   "B1234XYZ",
-				"violation_type":  "expired_meter",
-				"calculated_fine": 50000,
-				"status":          "PAID",
-				"rule_version_id": 1,
-				"payment_status":  "SUCCESS",
-			},
-		},
+		"data":    violations,
 	})
 }

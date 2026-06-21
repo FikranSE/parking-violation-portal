@@ -4,58 +4,64 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+
+	"parking_violation_portal/internal/modules/payments"
+	"parking_violation_portal/internal/modules/rules"
+	"parking_violation_portal/internal/modules/violations"
 )
 
 func main() {
-	// Initialize the Gin router
 	router := gin.Default()
 
-	// Apply global middleware (CORS, logging, recovery)
-	// router.Use(middleware.CORS())
+	router.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 
-	// Initialize dependencies (DB connection, Repositories, Services)
-	// db := database.Connect()
-	// rulesRepo := rules.NewRepository(db)
-	// rulesService := rules.NewService(rulesRepo)
-	// violationsRepo := violations.NewRepository(db)
-	// violationsService := violations.NewService(violationsRepo, rulesService)
-	// paymentsRepo := payments.NewRepository(db)
-	// paymentsService := payments.NewService(paymentsRepo)
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
 
-	// Set up the API group
+		c.Next()
+	})
+
+	rulesRepo := rules.NewRepository()
+	
+	violationsRepo := violations.NewRepository()
+	violationsService := violations.NewService(violationsRepo, rulesRepo)
+	
+	paymentsRepo := payments.NewRepository()
+	paymentsService := payments.NewService(paymentsRepo, violationsRepo)
+
+	rulesHandler := rules.NewHandler(rulesRepo)
+	violationsHandler := violations.NewHandler(violationsService, violationsRepo)
+	paymentsHandler := payments.NewHandler(paymentsService)
+
 	api := router.Group("/api")
 	{
-		// Rules endpoints
 		rulesGroup := api.Group("/rules")
 		{
-			// rulesHandler := rules.NewHandler(rulesService)
-			// rulesGroup.PUT("", rulesHandler.UpdateRules)
-			// rulesGroup.GET("/active", rulesHandler.GetActiveRule)
-			rulesGroup.GET("/ping", func(c *gin.Context) { c.JSON(200, gin.H{"message": "pong"}) }) // placeholder
+			rulesGroup.PUT("", rulesHandler.UpdateRules)
+			rulesGroup.GET("/active", rulesHandler.GetActiveRule)
+			rulesGroup.GET("/ping", func(c *gin.Context) { c.JSON(200, gin.H{"message": "pong"}) })
 		}
 
-		// Violations endpoints
 		violationsGroup := api.Group("/violations")
 		{
-			// violationsHandler := violations.NewHandler(violationsService)
-			// violationsGroup.POST("", violationsHandler.SubmitViolation)
-			// violationsGroup.GET("/:license_plate", violationsHandler.GetViolationsByPlate)
+			violationsGroup.POST("", violationsHandler.SubmitViolation)
+			violationsGroup.GET("/:license_plate", violationsHandler.GetViolationsByPlate)
 		}
 
-		// Payments endpoints
 		paymentsGroup := api.Group("/payments")
 		{
-			// paymentsHandler := payments.NewHandler(paymentsService)
-			// paymentsGroup.POST("", paymentsHandler.ProcessPayment)
+			paymentsGroup.POST("", paymentsHandler.ProcessPayment)
 		}
 
-		// Transactions history endpoint
-		api.GET("/transactions", func(c *gin.Context) {
-			// transactionsHandler.GetHistory(c)
-		})
+		api.GET("/transactions", violationsHandler.GetHistory)
 	}
 
-	// Start the server
 	port := ":8080"
 	log.Printf("Starting Parking Violation Portal API Gateway on port %s...", port)
 	if err := router.Run(port); err != nil {

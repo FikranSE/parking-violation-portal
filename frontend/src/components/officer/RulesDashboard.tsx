@@ -1,43 +1,43 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FineRule } from '@/types';
 
-// Mock active rule
-const defaultRule: FineRule = {
-  id: 1,
-  version: 1,
-  effective_from: new Date().toISOString(),
-  base_amounts: {
-    expired_meter: 50000,
-    no_parking_zone: 150000,
-    blocking_hydrant: 250000,
-    disabled_spot: 500000,
-  },
-  time_multipliers: [
-    { start_time: '06:00', end_time: '22:00', multiplier: 1.0 },
-    { start_time: '22:00', end_time: '06:00', multiplier: 1.5 },
-  ],
-  repeat_multipliers: {
-    '0': 1.0,
-    '1': 1.5,
-    '2+': 2.0,
-  },
-};
-
 export default function RulesDashboard() {
-  const [activeRule, setActiveRule] = useState<FineRule>(defaultRule);
+  const [activeRule, setActiveRule] = useState<FineRule | null>(null);
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  // Form state
-  const [expiredMeter, setExpiredMeter] = useState(activeRule.base_amounts.expired_meter);
-  const [noParking, setNoParking] = useState(activeRule.base_amounts.no_parking_zone);
+  const [expiredMeter, setExpiredMeter] = useState(0);
+  const [noParking, setNoParking] = useState(0);
+
+  useEffect(() => {
+    fetchActiveRule();
+  }, []);
+
+  const fetchActiveRule = async () => {
+    try {
+      const res = await fetch('http://localhost:8080/api/rules/active');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch rules');
+      
+      const rule = data.rule as FineRule;
+      setActiveRule(rule);
+      setExpiredMeter(rule.base_amounts.expired_meter || 0);
+      setNoParking(rule.base_amounts.no_parking_zone || 0);
+    } catch (err: any) {
+      setErrorMsg('Failed to load active rules configuration.');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeRule) return;
+
     setLoading(true);
     setSuccessMsg('');
+    setErrorMsg('');
 
     try {
       const payload = {
@@ -62,68 +62,82 @@ export default function RulesDashboard() {
       setActiveRule(data.rule);
       setSuccessMsg(`Successfully published Rule Version v${data.rule.version}`);
     } catch (err: any) {
-      alert(err.message);
+      setErrorMsg(err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  if (!activeRule && !errorMsg) {
+    return <div className="bg-white p-8 rounded-lg border border-neutral-200 animate-pulse h-64"></div>;
+  }
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100 flex flex-col h-full">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800">Fine Rules Dashboard</h2>
-        <span className="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-200">
-          v{activeRule.version} Active
+    <div className="bg-white p-8 rounded-lg border border-neutral-200 flex flex-col h-full">
+      <div className="flex justify-between items-center mb-8 border-b border-neutral-200 pb-4">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight text-neutral-900">Fine Rules Dashboard</h2>
+          <p className="text-sm text-neutral-500 mt-1">Configure baseline parameters for calculation.</p>
+        </div>
+        <span className="bg-neutral-900 text-white text-xs font-medium px-2 py-1 rounded">
+          v{activeRule?.version} Active
         </span>
       </div>
 
       {successMsg && (
-        <div className="mb-4 p-3 bg-green-50 text-green-700 text-sm rounded border border-green-200">
+        <div className="mb-6 p-4 bg-neutral-50 text-neutral-900 text-sm font-medium rounded-md border border-neutral-200 flex items-center gap-2">
+          <svg className="w-4 h-4 text-neutral-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
           {successMsg}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-6">
+      {errorMsg && (
+        <div className="mb-6 p-4 bg-neutral-50 text-red-600 text-sm font-medium rounded-md border border-red-200 flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          {errorMsg}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-8">
         <div className="space-y-4">
-          <h3 className="font-semibold text-gray-700 border-b pb-2">Base Fine Amounts</h3>
+          <h3 className="text-sm font-semibold tracking-tight text-neutral-900 border-b border-neutral-200 pb-2">Base Fine Amounts</h3>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Expired Meter (IDR)</label>
+              <label className="block text-sm font-medium text-neutral-800 mb-1.5">Expired Meter (IDR)</label>
               <input
                 type="number"
                 value={expiredMeter}
                 onChange={(e) => setExpiredMeter(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 bg-transparent border border-neutral-200 rounded-md text-sm text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">No Parking Zone (IDR)</label>
+              <label className="block text-sm font-medium text-neutral-800 mb-1.5">No Parking Zone (IDR)</label>
               <input
                 type="number"
                 value={noParking}
                 onChange={(e) => setNoParking(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 bg-transparent border border-neutral-200 rounded-md text-sm text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors"
               />
             </div>
           </div>
         </div>
 
         <div className="space-y-4">
-          <h3 className="font-semibold text-gray-700 border-b pb-2">Multiplier Configuration</h3>
-          <div className="bg-gray-50 p-3 rounded text-sm text-gray-600">
-            <p className="font-medium mb-1">Time Multiplier:</p>
-            <ul className="list-disc list-inside mb-2">
-              <li>06:00-22:00 = 1.0x</li>
-              <li>22:00-06:00 = 1.5x</li>
+          <h3 className="text-sm font-semibold tracking-tight text-neutral-900 border-b border-neutral-200 pb-2">Multiplier Configuration</h3>
+          <div className="p-4 bg-neutral-50 rounded-md border border-neutral-200 text-sm text-neutral-600">
+            <p className="font-medium text-neutral-900 mb-2">Time Multiplier:</p>
+            <ul className="list-inside space-y-1 mb-4">
+              <li className="flex gap-2"><span className="text-neutral-400">&bull;</span> 06:00 - 22:00 = 1.0x</li>
+              <li className="flex gap-2"><span className="text-neutral-400">&bull;</span> 22:00 - 06:00 = 1.5x</li>
             </ul>
-            <p className="font-medium mb-1">Repeat Offender Multiplier:</p>
-            <ul className="list-disc list-inside">
-              <li>1st Offense = 1.0x</li>
-              <li>2nd Offense = 1.5x</li>
-              <li>3rd+ Offense = 2.0x</li>
+            <p className="font-medium text-neutral-900 mb-2">Repeat Offender Multiplier:</p>
+            <ul className="list-inside space-y-1">
+              <li className="flex gap-2"><span className="text-neutral-400">&bull;</span> 1st Offense = 1.0x</li>
+              <li className="flex gap-2"><span className="text-neutral-400">&bull;</span> 2nd Offense = 1.5x</li>
+              <li className="flex gap-2"><span className="text-neutral-400">&bull;</span> 3rd+ Offense = 2.0x</li>
             </ul>
-            <p className="text-xs text-gray-400 mt-2 italic">*Multipliers locked for this demo assignment.</p>
           </div>
         </div>
 
@@ -131,7 +145,7 @@ export default function RulesDashboard() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white font-medium py-2.5 px-4 rounded hover:bg-blue-700 transition duration-200 disabled:opacity-50"
+            className="w-full bg-neutral-900 text-white text-sm font-medium py-2.5 px-4 rounded-md hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Publishing...' : 'Publish New Rule Version'}
           </button>

@@ -8,12 +8,23 @@ import (
 )
 
 type Handler struct {
-	// Normally you'd have a rules.Service here
-	// service *Service
+	repo *InMemoryRepository
 }
 
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(repo *InMemoryRepository) *Handler {
+	return &Handler{repo: repo}
+}
+
+func (h *Handler) GetActiveRule(c *gin.Context) {
+	rule, err := h.repo.GetActiveRule()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch active rule"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Active rule fetched successfully",
+		"rule":    rule,
+	})
 }
 
 func (h *Handler) UpdateRules(c *gin.Context) {
@@ -28,15 +39,16 @@ func (h *Handler) UpdateRules(c *gin.Context) {
 		return
 	}
 
-	// Mock logic: generate a new rule version
+	current, _ := h.repo.GetActiveRule()
 	newRule := FineRule{
-		ID:                2, // mock ID
-		Version:           2, // mock version
+		ID:                current.ID + 1,
+		Version:           current.Version + 1,
 		EffectiveFrom:     time.Now(),
 		BaseAmounts:       input.BaseAmounts,
 		TimeMultipliers:   input.TimeMultipliers,
 		RepeatMultipliers: input.RepeatMultipliers,
 	}
+	h.repo.activeRule = &newRule
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Fine rules updated successfully",

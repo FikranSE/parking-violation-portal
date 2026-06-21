@@ -2,6 +2,8 @@
 
 ## 1. Data Flow Description
 
+![Data Flow Diagram](backend/docs/dfd_parking_vp.jpeg)
+
 **Violation Submission & Fine Calculation Flow:**
 1. **[Synchronous]** Officer submits the violation form via the Next.js Frontend.
 2. **[Synchronous]** The API Gateway routes the `POST /api/violations` request to the Violations Module.
@@ -24,6 +26,8 @@
 ---
 
 ## 2. Entity-Relationship Diagram (ERD) Blueprint
+
+![Entity Relationship Diagram](backend/docs/erd_parking_vp.jpeg)
 
 Below are the structural details to be mapped in your drawing tool (e.g., draw.io).
 

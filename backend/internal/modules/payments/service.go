@@ -5,22 +5,20 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"parking_violation_portal/internal/modules/violations"
 )
 
-// Service handles business logic for payments
 type Service struct {
-	repo PaymentRepository
+	repo           *InMemoryRepository
+	violationsRepo *violations.InMemoryRepository
 }
 
-// NewService creates a new Payments Service
-func NewService(repo PaymentRepository) *Service {
-	return &Service{
-		repo: repo,
-	}
+func NewService(repo *InMemoryRepository, vRepo *violations.InMemoryRepository) *Service {
+	return &Service{repo: repo, violationsRepo: vRepo}
 }
 
-// Charge processes a payment based on a mock scenario
-func (s *Service) Charge(violationID int, amount float64, scenario string) (*Payment, error) {
+func (s *Service) ProcessPayment(violationID int, amount float64, scenario string) (*Payment, error) {
 	payment := &Payment{
 		ViolationID:     violationID,
 		Amount:          amount,
@@ -28,21 +26,22 @@ func (s *Service) Charge(violationID int, amount float64, scenario string) (*Pay
 		CreatedAt:       time.Now(),
 	}
 
-	// Mock Gateway Processing
 	if scenario == "success" {
 		payment.Status = "paid"
 		payment.TransactionID = fmt.Sprintf("txn_%s", uuid.New().String()[:8])
 	} else if scenario == "failed" {
 		payment.Status = "failed"
-		payment.TransactionID = "" // No transaction ID for failed payments
+		payment.TransactionID = "" 
 	} else {
 		return nil, fmt.Errorf("invalid payment scenario: %s (must be 'success' or 'failed')", scenario)
 	}
 
-	// Save to database
-	err := s.repo.Save(payment)
-	if err != nil {
-		return nil, fmt.Errorf("failed to save payment record: %w", err)
+	if err := s.repo.Save(payment); err != nil {
+		return nil, err
+	}
+
+	if payment.Status == "paid" {
+		s.violationsRepo.UpdateStatus(violationID, "PAID")
 	}
 
 	return payment, nil
