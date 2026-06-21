@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Violation Portal - Diagram Blueprints</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .sync-line { stroke: #3b82f6; stroke-width: 3; stroke-dasharray: none; animation: draw 2s infinite linear; }
+        .async-line { stroke: #f59e0b; stroke-width: 3; stroke-dasharray: 8 8; animation: moveDash 1s infinite linear; }
+        @keyframes moveDash { to { stroke-dashoffset: -16; } }
+        .highlight-bg { background-color: #fef3c7; border-left: 4px solid #f59e0b; }
+        .relation-badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 9999px; font-weight: bold; font-size: 0.7rem; color: white; }
+        .rel-one { background-color: #4f46e5; }
+        .rel-many { background-color: #e11d48; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="mb-12 text-center">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">System Diagram Blueprint</h1>
+            <p class="text-lg text-gray-600">Reference for draw.io replication (Data Flow & ERD)</p>
+        </header>
+
+        <!-- SECTION 1: Data Flow Diagram -->
+        <section class="mb-16 bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+            <h2 class="text-2xl font-bold border-b pb-4 mb-8 text-gray-800">1. Data Flow Diagram (DFD)</h2>
+            
+            <div class="flex items-center gap-4 mb-6 text-sm font-medium">
+                <div class="flex items-center gap-2"><div class="w-8 h-1 bg-blue-500"></div> Synchronous Flow</div>
+                <div class="flex items-center gap-2"><div class="w-8 h-1 bg-amber-500 border-dashed border-t-2"></div> Asynchronous Flow</div>
+            </div>
+
+            <div class="relative py-10 overflow-hidden bg-slate-50 rounded-lg border border-slate-100 p-8">
+                
+                <!-- SVG Connections Background -->
+                <svg class="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
+                    <defs>
+                        <marker id="arrow-sync" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                          <path d="M0,0 L0,6 L9,3 z" fill="#3b82f6" />
+                        </marker>
+                        <marker id="arrow-async" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                          <path d="M0,0 L0,6 L9,3 z" fill="#f59e0b" />
+                        </marker>
+                    </defs>
+                    <!-- Sync lines (Col 1->2->3->4->5) -->
+                    <line x1="15%" y1="20%" x2="25%" y2="20%" class="sync-line" marker-end="url(#arrow-sync)" />
+                    <line x1="35%" y1="20%" x2="45%" y2="20%" class="sync-line" marker-end="url(#arrow-sync)" />
+                    <line x1="55%" y1="20%" x2="65%" y2="20%" class="sync-line" marker-end="url(#arrow-sync)" />
+                    <line x1="75%" y1="20%" x2="85%" y2="20%" class="sync-line" marker-end="url(#arrow-sync)" />
+                    
+                    <!-- Async lines routing (PostgreSQL -> RabbitMQ -> Consumers) -->
+                    <!-- DB (Col 5, ~90%X) to RabbitMQ (Col 3, ~50%X) -->
+                    <path d="M 90% 25% L 90% 60% L 58% 60%" fill="none" class="async-line" marker-end="url(#arrow-async)" />
+                    
+                    <!-- RabbitMQ (Col 3, ~50%X) to Billing (Col 2, ~30%X, 60%Y) -->
+                    <line x1="42%" y1="60%" x2="35%" y2="60%" class="async-line" marker-end="url(#arrow-async)" />
+                    
+                    <!-- RabbitMQ (Col 3, ~50%X) to Notification (Col 2, ~30%X, 85%Y) -->
+                    <path d="M 50% 68% L 50% 85% L 35% 85%" fill="none" class="async-line" marker-end="url(#arrow-async)" />
+                </svg>
+
+                <div class="relative z-10 grid grid-cols-5 gap-8">
+                    <!-- Top Row: Sync Flow -->
+                    <div class="col-start-1 bg-white border-2 border-gray-300 p-4 rounded-lg shadow-md text-center">
+                        <div class="text-3xl mb-2">👮</div>
+                        <h3 class="font-bold">Officer</h3>
+                        <p class="text-xs text-gray-500">Submits Form</p>
+                    </div>
+
+                    <div class="col-start-2 bg-indigo-50 border-2 border-indigo-200 p-4 rounded-lg shadow-md text-center">
+                        <div class="text-2xl mb-2 text-indigo-500">⚛️</div>
+                        <h3 class="font-bold text-indigo-900">Next.js UI</h3>
+                        <p class="text-xs text-indigo-600">POST /api/violations</p>
+                    </div>
+
+                    <div class="col-start-3 bg-teal-50 border-2 border-teal-200 p-4 rounded-lg shadow-md text-center">
+                        <div class="text-2xl mb-2 text-teal-500">⚙️</div>
+                        <h3 class="font-bold text-teal-900">API Gateway</h3>
+                        <p class="text-xs text-teal-600">Routes to Module</p>
+                    </div>
+
+                    <div class="col-start-4 bg-emerald-50 border-2 border-emerald-200 p-4 rounded-lg shadow-md text-center">
+                        <div class="text-2xl mb-2 text-emerald-500">🧮</div>
+                        <h3 class="font-bold text-emerald-900">Violation Engine</h3>
+                        <p class="text-xs text-emerald-600">Calculates Fine</p>
+                    </div>
+
+                    <div class="col-start-5 bg-blue-50 border-2 border-blue-200 p-4 rounded-lg shadow-md text-center">
+                        <div class="text-2xl mb-2 text-blue-500">🗄️</div>
+                        <h3 class="font-bold text-blue-900">PostgreSQL</h3>
+                        <p class="text-xs text-blue-600">Saves Record</p>
+                    </div>
+
+                    <!-- Bottom Row: Async Flow -->
+                    <div class="col-start-3 row-start-2 bg-amber-50 border-2 border-amber-200 p-4 rounded-lg shadow-md text-center mt-12">
+                        <div class="text-2xl mb-2 text-amber-500">🐇</div>
+                        <h3 class="font-bold text-amber-900">RabbitMQ</h3>
+                        <p class="text-xs text-amber-600">Broker (Pub/Sub)</p>
+                    </div>
+
+                    <div class="col-start-2 row-start-2 bg-purple-50 border-2 border-purple-200 p-4 rounded-lg shadow-md text-center mt-12">
+                        <div class="text-2xl mb-2 text-purple-500">🧾</div>
+                        <h3 class="font-bold text-purple-900">Billing Service</h3>
+                        <p class="text-xs text-purple-600">Consumes Event -> Invoice</p>
+                    </div>
+
+                    <div class="col-start-2 row-start-3 bg-rose-50 border-2 border-rose-200 p-4 rounded-lg shadow-md text-center mt-4">
+                        <div class="text-2xl mb-2 text-rose-500">✉️</div>
+                        <h3 class="font-bold text-rose-900">Notification</h3>
+                        <p class="text-xs text-rose-600">Consumes Event -> Email</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- SECTION 2: Entity-Relationship Diagram -->
+        <section class="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+            <h2 class="text-2xl font-bold border-b pb-4 mb-4 text-gray-800">2. Entity-Relationship Diagram (ERD)</h2>
+            <p class="mb-2 text-gray-600">Highlighted yellow rows represent explicit snapshot/version fields that protect historical calculations.</p>
+            <div class="flex items-center gap-4 mb-8 text-sm">
+                <span class="flex items-center gap-2"><div class="relation-badge rel-one">1</div> One</span>
+                <span class="flex items-center gap-2 text-gray-500">─── relates to ───</span>
+                <span class="flex items-center gap-2"><div class="relation-badge rel-many">N</div> Many</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+                
+                <!-- Table 1: Fine_Rules -->
+                <div class="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden z-10 relative">
+                    <!-- Line connecting to Violations -->
+                    <div class="hidden md:block absolute top-16 -right-6 w-12 border-t-2 border-indigo-400 z-0"></div>
+                    
+                    <div class="bg-slate-800 text-white font-bold px-4 py-3 flex justify-between items-center">
+                        <span>fine_rules</span>
+                        <span class="text-xs bg-slate-600 px-2 rounded">Table</span>
+                    </div>
+                    <table class="w-full text-left text-sm relative z-10 bg-white">
+                        <tr class="border-b bg-gray-50">
+                            <td class="p-2 font-mono font-bold text-indigo-600 flex items-center justify-between">
+                                <span>id <span class="text-xs text-gray-400">(PK)</span></span>
+                                <span class="relation-badge rel-one shadow" title="One Rule">1</span>
+                            </td>
+                            <td class="p-2 text-gray-600">serial</td>
+                        </tr>
+                        <tr class="border-b"><td class="p-2 font-mono">version</td><td class="p-2 text-gray-600">integer</td></tr>
+                        <tr class="border-b"><td class="p-2 font-mono">effective_from</td><td class="p-2 text-gray-600">timestamp</td></tr>
+                        <tr class="border-b"><td class="p-2 font-mono">effective_to</td><td class="p-2 text-gray-600">timestamp</td></tr>
+                        <tr class="border-b"><td class="p-2 font-mono">base_amounts</td><td class="p-2 text-gray-600">jsonb</td></tr>
+                        <tr class="border-b"><td class="p-2 font-mono">time_multipliers</td><td class="p-2 text-gray-600">jsonb</td></tr>
+                        <tr><td class="p-2 font-mono">repeat_multipliers</td><td class="p-2 text-gray-600">jsonb</td></tr>
+                    </table>
+                </div>
+
+                <!-- Table 2: Violations -->
+                <div class="bg-white border border-gray-300 rounded-lg shadow-xl overflow-hidden z-10 transform scale-105 relative">
+                    <!-- Line connecting to Payments -->
+                    <div class="hidden md:block absolute top-16 -right-6 w-12 border-t-2 border-emerald-400 z-0"></div>
+
+                    <div class="bg-blue-600 text-white font-bold px-4 py-3 flex justify-between items-center">
+                        <span>violations</span>
+                        <span class="text-xs bg-blue-500 px-2 rounded">Table</span>
+                    </div>
+                    <table class="w-full text-left text-sm relative z-10 bg-white">
+                        <tr class="border-b bg-gray-50">
+                            <td class="p-2 font-mono font-bold text-indigo-600 flex items-center justify-between">
+                                <span>id <span class="text-xs text-gray-400">(PK)</span></span>
+                                <span class="relation-badge rel-one shadow" title="One Violation">1</span>
+                            </td>
+                            <td class="p-2 text-gray-600">serial</td>
+                        </tr>
+                        <tr class="border-b"><td class="p-2 font-mono">license_plate</td><td class="p-2 text-gray-600">varchar</td></tr>
+                        <tr class="border-b"><td class="p-2 font-mono">violation_type</td><td class="p-2 text-gray-600">varchar</td></tr>
+                        <tr class="border-b"><td class="p-2 font-mono">violation_time</td><td class="p-2 text-gray-600">timestamp</td></tr>
+                        
+                        <!-- Highlighted Fields -->
+                        <tr class="border-b highlight-bg">
+                            <td class="p-2 font-mono font-bold text-amber-700 flex items-center justify-between">
+                                <span>rule_version_id <span class="text-xs">(FK)</span></span>
+                                <span class="relation-badge rel-many shadow" title="Many Violations per Rule">N</span>
+                            </td>
+                            <td class="p-2 text-amber-700 text-xs font-semibold">integer<br>(Locks formula)</td>
+                        </tr>
+                        <tr class="border-b highlight-bg">
+                            <td class="p-2 font-mono font-bold text-amber-700">calculated_fine</td>
+                            <td class="p-2 text-amber-700 text-xs font-semibold">numeric<br>(Snapshot amt)</td>
+                        </tr>
+
+                        <tr class="border-b"><td class="p-2 font-mono">status</td><td class="p-2 text-gray-600">varchar</td></tr>
+                        <tr><td class="p-2 font-mono">photo_url</td><td class="p-2 text-gray-600">text</td></tr>
+                    </table>
+                </div>
+
+                <!-- Table 3: Payments -->
+                <div class="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden z-10 relative">
+                    <div class="bg-emerald-600 text-white font-bold px-4 py-3 flex justify-between items-center">
+                        <span>payments</span>
+                        <span class="text-xs bg-emerald-500 px-2 rounded">Table</span>
+                    </div>
+                    <table class="w-full text-left text-sm bg-white relative z-10">
+                        <tr class="border-b bg-gray-50"><td class="p-2 font-mono font-bold text-indigo-600">id <span class="text-xs text-gray-400">(PK)</span></td><td class="p-2 text-gray-600">serial</td></tr>
+                        <tr class="border-b">
+                            <td class="p-2 font-mono font-bold text-amber-600 flex items-center justify-between">
+                                <span>violation_id <span class="text-xs">(FK)</span></span>
+                                <span class="relation-badge rel-many shadow" title="Many Payments per Violation">N</span>
+                            </td>
+                            <td class="p-2 text-gray-600">integer</td>
+                        </tr>
+                        <tr class="border-b"><td class="p-2 font-mono">amount</td><td class="p-2 text-gray-600">numeric</td></tr>
+                        <tr class="border-b"><td class="p-2 font-mono">status</td><td class="p-2 text-gray-600">varchar</td></tr>
+                        <tr class="border-b"><td class="p-2 font-mono">transaction_id</td><td class="p-2 text-gray-600">varchar</td></tr>
+                        <tr><td class="p-2 font-mono">created_at</td><td class="p-2 text-gray-600">timestamp</td></tr>
+                    </table>
+                </div>
+
+            </div>
+        </section>
+        
+    </div>
+</body>
+</html>
